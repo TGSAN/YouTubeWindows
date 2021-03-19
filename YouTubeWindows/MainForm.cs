@@ -17,11 +17,13 @@ namespace YouTubeWindows
     public partial class MainForm : Form
     {
         private string startupArgs = "";
+        private string runtimePath = null;
         private CoreWebView2Environment coreWebView2Environment;
         public WebView2 splashScreenWebView;
         public WebView2 screenWebView;
         public Panel splashScreenWebViewPanel = new Panel();
         public Panel screenWebViewPanel = new Panel();
+        private bool foundRuntime = false;
         private bool allowEndscreen = false;
         private bool _fullscreen = false;
 
@@ -47,8 +49,53 @@ namespace YouTubeWindows
             }
         }
 
+        private void tryRuntime(string path)
+        {
+            try
+            {
+                var availableBrowserVersionString = CoreWebView2Environment.GetAvailableBrowserVersionString(path);
+                if (availableBrowserVersionString == null)
+                {
+                    throw new Exception("缺少 WebView2 Runtime");
+                }
+                else
+                {
+                    foundRuntime = true;
+                    runtimePath = path;
+                }
+            }
+            catch { }
+        }
+
         public MainForm(string[] args)
         {
+            string[] tryRuntimePaths = {
+                // Fixed Version 固定版本
+                AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "Runtime",
+                // Evergreen 长青版
+                null
+            };
+            foreach (string tryRuntimePath in tryRuntimePaths)
+            {
+                if (foundRuntime == false)
+                {
+                    tryRuntime(tryRuntimePath);
+                }
+            }
+
+            if (foundRuntime)
+            {
+#if DEBUG
+                var availableBrowserVersionString = CoreWebView2Environment.GetAvailableBrowserVersionString(runtimePath);
+                MessageBox.Show("当前 WebView2 Runtime:\n" + (runtimePath == null ? "Evergreen Runtime" : "Fixed Version Runtime: " + runtimePath) + "\nVersion: " + availableBrowserVersionString, "YouTube");
+#endif
+            }
+            else
+            {
+                MessageBox.Show("缺少 WebView2 Runtime，无法运行。\n可以通过以下任意一种方式安装：\n\n1. 安装任意非稳定通道 Microsoft Edge (Chromium) 浏览器。\n2. 安装 WebView2 Runtime Evergreen 版本。\n3. 将 WebView2 Runtime Fixed Version 版本放入 YouTube For Windows 的 Runtime 文件夹下。", "YouTube");
+                Application.Exit();
+            }
+
             InitializeComponent();
 
             this.Icon = Resource.icon;
@@ -86,7 +133,7 @@ namespace YouTubeWindows
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "/User Data/";
+            var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "User Data";
             var ua = "GoogleTV/10.0 (Windows NT 10.0; Cobalt; Wired) html5_enable_androidtv_cobalt_widevine html5_enable_cobalt_experimental_vp9_decoder";
             //var ua = "Mozilla/5.0 (WINDOWS 10.0), GAME_XboxSeriesX/10.0.18363.7196 (Microsoft, Xbox Series X, Wired)";
             //var ua = "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.5) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/3.0 Chrome/69.0.3497.106 TV Safari/537.36";
@@ -95,7 +142,7 @@ namespace YouTubeWindows
             //var options = new CoreWebView2EnvironmentOptions("--disable-web-security --enable-features=msPlayReadyWin10 --user-agent=\"Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36 Edge/20.02\"");
             //var options = new CoreWebView2EnvironmentOptions("--enable-features=msMediaFoundationClearPlaybackWin10,msPlayReadyWin10 --user-agent=\"Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36 Edge/20.02\"");
             var options = new CoreWebView2EnvironmentOptions(startupArgs + "--allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
-            coreWebView2Environment = CoreWebView2Environment.CreateAsync(null, userDataDir, options).Result;
+            coreWebView2Environment = CoreWebView2Environment.CreateAsync(runtimePath, userDataDir, options).Result;
 
             splashScreenWebView = new WebView2();
             screenWebView = new WebView2();
@@ -267,7 +314,10 @@ namespace YouTubeWindows
                     ctxMainForm.splashScreenWebView.ExecuteScriptAsync("document.body.style.backgroundColor = '#181818'");
                     ctxMainForm.screenWebView.Enabled = true;
                     ctxMainForm.screenWebView.ExecuteScriptAsync("document.body.style.opacity = 1;");
-                    ctxMainForm.screenWebView.Focus();
+                    if (ctxMainForm.Focused)
+                    {
+                        ctxMainForm.screenWebView.Focus();
+                    }
                 });
 
                 if (ctxMainForm.InvokeRequired)
