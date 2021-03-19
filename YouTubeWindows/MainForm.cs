@@ -93,7 +93,9 @@ namespace YouTubeWindows
             else
             {
                 MessageBox.Show("缺少 WebView2 Runtime，无法运行。\n可以通过以下任意一种方式安装：\n\n1. 安装任意非稳定通道 Microsoft Edge (Chromium) 浏览器。\n2. 安装 WebView2 Runtime Evergreen 版本。\n3. 将 WebView2 Runtime Fixed Version 版本放入 YouTube For Windows 的 Runtime 文件夹下。", "YouTube");
+                Close();
                 Application.Exit();
+                return;
             }
 
             InitializeComponent();
