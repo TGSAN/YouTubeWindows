@@ -121,6 +121,9 @@
   <data name="icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="Staff" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Staff.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;gb2312</value>
+  </data>
   <data name="youtube_splash_screen" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\youtube_splash_screen.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;gb2312</value>
   </data>

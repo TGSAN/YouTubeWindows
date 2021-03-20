@@ -1,0 +1,8 @@
+﻿YouTube For Windows Client By TGSAN
+
+Base EBWebview2 - Microsoft Edge (Chromium) Runtime
+
+
+YouTube
+
+YouTube 是 Google 的子公司

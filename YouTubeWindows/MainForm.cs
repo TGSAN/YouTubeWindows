@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -17,6 +18,7 @@ namespace YouTubeWindows
     public partial class MainForm : Form
     {
         private string startupArgs = "";
+        private string runtimeVersion = "Unknown";
         private string runtimePath = null;
         private CoreWebView2Environment coreWebView2Environment;
         public WebView2 splashScreenWebView;
@@ -62,6 +64,7 @@ namespace YouTubeWindows
                 {
                     foundRuntime = true;
                     runtimePath = path;
+                    runtimeVersion = availableBrowserVersionString;
                 }
             }
             catch { }
@@ -136,7 +139,8 @@ namespace YouTubeWindows
         private void MainForm_Load(object sender, EventArgs e)
         {
             var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "User Data";
-            var ua = "GoogleTV/10.0 (Windows NT 10.0; Cobalt; Wired) html5_enable_androidtv_cobalt_widevine html5_enable_cobalt_experimental_vp9_decoder";
+            var ua = "GoogleTV/CloudMoe-Version (DISKTOP; Windows NT " + Environment.OSVersion.Version.ToString() + "; Wired) Cobalt/" + runtimeVersion + " (unlike Gecko) html5_enable_androidtv_cobalt_widevine html5_enable_cobalt_experimental_vp9_decoder";
+            // var ua = "GoogleTV/10.0 (Windows NT 10.0; Cobalt; Wired) html5_enable_androidtv_cobalt_widevine html5_enable_cobalt_experimental_vp9_decoder";
             //var ua = "Mozilla/5.0 (WINDOWS 10.0), GAME_XboxSeriesX/10.0.18363.7196 (Microsoft, Xbox Series X, Wired)";
             //var ua = "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.5) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/3.0 Chrome/69.0.3497.106 TV Safari/537.36";
             //var ua = "Mozilla/5.0 (PlayStation 4 7.51) AppleWebKit/605.1.15 (KHTML, like Gecko)";
@@ -160,11 +164,23 @@ namespace YouTubeWindows
             InitializeSplashScreenAsync();
         }
 
+        private static Stream GenerateStreamFromString(string s)
+        {
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(s);
+            writer.Flush();
+            stream.Position = 0;
+            return stream;
+        }
+
         private async Task NativeBridgeRegister(WebView2 webView2)
         {
             webView2.CoreWebView2.AddHostObjectToScript("NativeBridge", new Bridge(this));
             // 简化 NativeBridge
             await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.NativeBridge = window?.chrome?.webview?.hostObjects?.NativeBridge;");
+            // 替换 Close
+            await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.close = window?.chrome?.webview?.hostObjects?.NativeBridge?.Close;");
             // 全屏和重载监听
             await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.addEventListener('keydown', (event) => { if (event.keyCode === 122) { event.returnValue = false; NativeBridge.ToggleFullscreen(); } if(event.keyCode == 116) { event.returnValue = false; NativeBridge.ReloadApp(); } }, true);");
         }
@@ -187,6 +203,8 @@ namespace YouTubeWindows
             await screenWebView.EnsureCoreWebView2Async(coreWebView2Environment);
             await NativeBridgeRegister(screenWebView);
             screenWebView.CoreWebView2.DOMContentLoaded += CoreWebView2_DOMContentLoaded;
+            screenWebView.CoreWebView2.AddWebResourceRequestedFilter("https://www.gstatic.com/ytlr/txt/licenses_googletv.txt", CoreWebView2WebResourceContext.All);
+            screenWebView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
             screenWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
             screenWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
             screenWebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
@@ -195,6 +213,33 @@ namespace YouTubeWindows
             screenWebView.CoreWebView2.OpenDevToolsWindow();
 #endif
             ReloadApp();
+        }
+
+        private void CoreWebView2_WebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e)
+        {
+            Console.WriteLine(e.Request.Uri);
+            if (e.Request.Uri == "https://www.gstatic.com/ytlr/txt/licenses_googletv.txt")
+            {
+                var stream = GenerateStreamFromString(Resource.Staff.Replace("\n", "\n\u200B"));
+                e.Response = coreWebView2Environment.CreateWebResourceResponse(stream, 200, "OK", "Content-Type: text/html");
+                new Thread(() =>
+                {
+                    Thread.Sleep(3000); // 流资源 3000ms 后释放
+                    var action = new Action(() =>
+                    {
+                        stream.Close();
+                    });
+
+                    if (InvokeRequired)
+                    {
+                        Invoke(action);
+                    }
+                    else
+                    {
+                        action();
+                    }
+                }).Start();
+            }
         }
 
         public void ReloadApp()
@@ -262,6 +307,11 @@ namespace YouTubeWindows
             return "Example: " + param;
         }
 
+        public void Close()
+        {
+            ctxMainForm.Close();
+        }
+
         public void ReloadApp()
         {
             ctxMainForm.ReloadApp();
@@ -292,7 +342,7 @@ namespace YouTubeWindows
 
                 Thread.Sleep(3000);
 
-                var actionw = new Action(() =>
+                var action2 = new Action(() =>
                 {
                     ctxMainForm.splashScreenWebView.ExecuteScriptAsync("document.getElementById('background').style.opacity = 0;");
                     ctxMainForm.screenWebViewPanel.Visible = true;
@@ -300,11 +350,11 @@ namespace YouTubeWindows
 
                 if (ctxMainForm.InvokeRequired)
                 {
-                    ctxMainForm.Invoke(actionw);
+                    ctxMainForm.Invoke(action2);
                 }
                 else
                 {
-                    actionw();
+                    action2();
                 }
 
                 Thread.Sleep(500);

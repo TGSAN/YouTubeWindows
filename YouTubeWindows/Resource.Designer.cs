@@ -71,6 +71,15 @@ namespace YouTubeWindows {
         }
         
         /// <summary>
+        ///   查找类似  的本地化字符串。
+        /// </summary>
+        internal static string Staff {
+            get {
+                return ResourceManager.GetString("Staff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 &lt;!DOCTYPE html&gt;
         ///&lt;!--
         ///  Copyright 2020 Google LLC. All Rights Reserved.
