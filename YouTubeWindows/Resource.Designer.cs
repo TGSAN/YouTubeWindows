@@ -71,7 +71,14 @@ namespace YouTubeWindows {
         }
         
         /// <summary>
-        ///   查找类似  的本地化字符串。
+        ///   查找类似 YouTube For Windows Client By TGSAN
+        ///
+        ///Base EBWebview2 - Microsoft Edge (Chromium) Runtime
+        ///
+        ///
+        ///YouTube
+        ///
+        ///YouTube 是 Google 的子公司 的本地化字符串。
         /// </summary>
         internal static string Staff {
             get {
@@ -92,8 +99,7 @@ namespace YouTubeWindows {
         ///
         ///  Unless required by applicable law or agreed to in writing, software
         ///  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
-        ///  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-        ///  [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string youtube_splash_screen {
             get {
