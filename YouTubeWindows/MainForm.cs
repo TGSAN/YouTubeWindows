@@ -259,7 +259,7 @@ namespace YouTubeWindows
                 screenWebView.Width = 15360;
                 screenWebView.Height = 8640;
                 // 破解分辨率（先伪装8K屏幕，然后还原）
-                screenWebView.ExecuteScriptAsync("{ let YTInitCheckerId = setInterval(() => { if(yt?.config_?.WEB_PLAYER_CONTEXT_CONFIGS?.WEB_PLAYER_CONTEXT_CONFIG_ID_LIVING_ROOM_WATCH || ytcfg?.data_?.WEB_PLAYER_CONTEXT_CONFIGS?.WEB_PLAYER_CONTEXT_CONFIG_ID_LIVING_ROOM_WATCH) { clearInterval(YTInitCheckerId); NativeBridge.ActiveScreen(); } }, 1000); }");
+                screenWebView.ExecuteScriptAsync("{ let YTInitCheckerId = setInterval(() => { if(!!document.getElementsByTagName(\"video\")[0]) { clearInterval(YTInitCheckerId); NativeBridge.ActiveScreen(); } }, 1000); }");
                 // 后台播放
                 screenWebView.ExecuteScriptAsync("for (event_name of ['visibilitychange', 'webkitvisibilitychange', 'blur']) { window.addEventListener(event_name, function(event) { event.stopImmediatePropagation(); }, true); }");
                 // 注入动画
