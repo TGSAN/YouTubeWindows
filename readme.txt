@@ -4,8 +4,8 @@ YouTube Windows
 
 操作系统：
 
-Windows 7/8.1/10
-Windows Server 2008 R2/2012 R2/2012/2016/2019
+Windows 7/8.1/10/11
+Windows Server 2008 R2/2012 R2/2012/2016/2019/2022
 
 处理器：
 
