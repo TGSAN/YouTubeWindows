@@ -1,7 +1,9 @@
-﻿YouTube For Windows Client By TGSAN
+﻿YouTube TV For Windows Client <--%PROGRAM_VERSION%-->
+By TGSAN
 
-Base EBWebview2 - Microsoft Edge (Chromium) Runtime
-
+Windows Cobalt on EBWebView2
+Microsoft Edge (Chromium) Runtime
+Version: <--%WEBVIEW_VERSION%-->
 
 YouTube
 

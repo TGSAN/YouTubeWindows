@@ -2,12 +2,10 @@
 using Microsoft.Web.WebView2.WinForms;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,17 +13,29 @@ using System.Windows.Forms;
 
 namespace YouTubeWindows
 {
+    public struct WebView2RuntimeInfo
+    {
+        public string Version;
+        public string Path;
+    }
+
     public partial class MainForm : Form
     {
-        private string startupArgs = "";
-        private string runtimeVersion = "Unknown";
-        private string runtimePath = null;
+        public string webview2StartupArgs = "";
+        WebView2RuntimeInfo? webview2RuntimeInfo = null;
         private CoreWebView2Environment coreWebView2Environment;
         public WebView2 splashScreenWebView;
         public WebView2 screenWebView;
         public Panel splashScreenWebViewPanel = new Panel();
         public Panel screenWebViewPanel = new Panel();
-        private bool foundRuntime = false;
+        private int titleHeight
+        {
+            get
+            {
+                Rectangle screenRectangle = this.RectangleToScreen(this.ClientRectangle);
+                return screenRectangle.Top - this.Top;
+            }
+        }
         private bool allowEndscreen = false;
         private bool _fullscreen = false;
 
@@ -51,69 +61,59 @@ namespace YouTubeWindows
             }
         }
 
-        private void tryRuntime(string path)
+        private WebView2RuntimeInfo? ReadRuntime(string path)
         {
             try
             {
                 var availableBrowserVersionString = CoreWebView2Environment.GetAvailableBrowserVersionString(path);
-                if (availableBrowserVersionString == null)
+                if (availableBrowserVersionString != null)
                 {
-                    throw new Exception("缺少 WebView2 Runtime");
-                }
-                else
-                {
-                    foundRuntime = true;
-                    runtimePath = path;
-                    runtimeVersion = availableBrowserVersionString;
+                    WebView2RuntimeInfo info = new WebView2RuntimeInfo()
+                    {
+                        Version = availableBrowserVersionString,
+                        Path = path
+                    };
+                    return info;
                 }
             }
             catch { }
+            return null;
         }
 
         public MainForm(string[] args)
         {
-            string[] tryRuntimePaths = {
+            string[] runtimePaths = {
                 // Fixed Version 固定版本
-                AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "Runtime",
+                AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "runtime",
                 // Evergreen 长青版
                 null
             };
-            foreach (string tryRuntimePath in tryRuntimePaths)
+
+            foreach (string runtimePath in runtimePaths)
             {
-                if (foundRuntime == false)
+                webview2RuntimeInfo = ReadRuntime(runtimePath);
+                if (webview2RuntimeInfo != null)
                 {
-                    tryRuntime(tryRuntimePath);
+                    break;
                 }
             }
 
-            if (foundRuntime)
+            if (webview2RuntimeInfo != null)
             {
 #if DEBUG
-                var availableBrowserVersionString = CoreWebView2Environment.GetAvailableBrowserVersionString(runtimePath);
-                MessageBox.Show("当前 WebView2 Runtime:\n" + (runtimePath == null ? "Evergreen Runtime" : "Fixed Version Runtime: " + runtimePath) + "\nVersion: " + availableBrowserVersionString, "YouTube");
+                var availableBrowserVersionString = CoreWebView2Environment.GetAvailableBrowserVersionString();
+                MessageBox.Show("当前 WebView2 Runtime:\n" + (webview2RuntimeInfo.Value.Path == null ? "Evergreen Runtime" : "Fixed Version Runtime: " + webview2RuntimeInfo.Value.Path) + "\nVersion: " + availableBrowserVersionString, "YouTube");
 #endif
             }
             else
             {
-                MessageBox.Show("缺少 WebView2 Runtime，无法运行。\n可以通过以下任意一种方式安装：\n\n1. 安装任意非稳定通道 Microsoft Edge (Chromium) 浏览器。\n2. 安装 WebView2 Runtime Evergreen 版本。\n3. 将 WebView2 Runtime Fixed Version 版本放入 YouTube For Windows 的 Runtime 文件夹下。", "YouTube");
+                MessageBox.Show("缺少 WebView2 Runtime，无法运行。\n可以通过以下任意一种方式安装：\n\n1. 安装任意非稳定通道 Microsoft Edge (Chromium) 浏览器。\n2. 安装 WebView2 Runtime Evergreen 版本。\n3. 将 WebView2 Runtime Fixed Version 版本放入 YouTube For Windows 的 runtime 文件夹下。", "YouTube");
                 Close();
                 Application.Exit();
                 return;
             }
 
-            InitializeComponent();
-
-            this.Icon = Resource.icon;
-
-            screenWebViewPanel.Dock = DockStyle.Fill;
-            screenWebViewPanel.BackColor = Color.Transparent;
-            splashScreenWebViewPanel.Dock = DockStyle.Fill;
-            splashScreenWebViewPanel.BackColor = Color.Transparent;
-
-            Controls.Add(splashScreenWebViewPanel); // 放置闪屏承载层（顶部）
-            Controls.Add(screenWebViewPanel); // 放置App承载层（底部）
-
-            StringBuilder startupArgsBuilder = new StringBuilder();
+            StringBuilder webview2StartupArgsBuilder = new StringBuilder();
 
             foreach (var arg in args)
             {
@@ -126,29 +126,34 @@ namespace YouTubeWindows
                         break;
                     default:
                         {
-                            startupArgsBuilder.Append(arg + " ");
+                            webview2StartupArgsBuilder.Append(arg + " ");
                         }
                         break;
                 }
 
             }
 
-            startupArgs = startupArgsBuilder.ToString();
+            webview2StartupArgs = webview2StartupArgsBuilder.ToString();
+
+            InitializeComponent();
+
+            this.Icon = Resource.icon;
+
+            screenWebViewPanel.Dock = DockStyle.Fill;
+            screenWebViewPanel.BackColor = Color.Transparent;
+            splashScreenWebViewPanel.Dock = DockStyle.Fill;
+            splashScreenWebViewPanel.BackColor = Color.Transparent;
+
+            Controls.Add(splashScreenWebViewPanel); // 放置闪屏承载层（顶部）
+            Controls.Add(screenWebViewPanel); // 放置App承载层（底部）
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
             var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "User Data";
-            var ua = "GoogleTV/CloudMoe-Version (DISKTOP; Windows NT " + Environment.OSVersion.Version.ToString() + "; Wired) Cobalt/" + runtimeVersion + " (unlike Gecko) html5_enable_androidtv_cobalt_widevine html5_enable_cobalt_experimental_vp9_decoder";
-            // var ua = "GoogleTV/10.0 (Windows NT 10.0; Cobalt; Wired) html5_enable_androidtv_cobalt_widevine html5_enable_cobalt_experimental_vp9_decoder";
-            //var ua = "Mozilla/5.0 (WINDOWS 10.0), GAME_XboxSeriesX/10.0.18363.7196 (Microsoft, Xbox Series X, Wired)";
-            //var ua = "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.5) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/3.0 Chrome/69.0.3497.106 TV Safari/537.36";
-            //var ua = "Mozilla/5.0 (PlayStation 4 7.51) AppleWebKit/605.1.15 (KHTML, like Gecko)";
-            //var ua = "Mozilla/5.0 (Nintendo Switch; WebApplet) AppleWebKit/606.4 (KHTML, like Gecko) NF/6.0.1.16.10 NintendoBrowser/5.1.0.20923";
-            //var options = new CoreWebView2EnvironmentOptions("--disable-web-security --enable-features=msPlayReadyWin10 --user-agent=\"Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36 Edge/20.02\"");
-            //var options = new CoreWebView2EnvironmentOptions("--enable-features=msMediaFoundationClearPlaybackWin10,msPlayReadyWin10 --user-agent=\"Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36 Edge/20.02\"");
-            var options = new CoreWebView2EnvironmentOptions(startupArgs + "--allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
-            coreWebView2Environment = CoreWebView2Environment.CreateAsync(runtimePath, userDataDir, options).Result;
+            var ua = "GoogleTV/CloudMoe-Version (DISKTOP; Windows NT " + Environment.OSVersion.Version.ToString() + "; Wired) Cobalt/" + webview2RuntimeInfo.Value.Version + " (unlike Gecko) html5_enable_androidtv_cobalt_widevine html5_enable_cobalt_experimental_vp9_decoder html5_live_head_playable";
+            var options = new CoreWebView2EnvironmentOptions(webview2StartupArgs + "--allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
+            coreWebView2Environment = CoreWebView2Environment.CreateAsync(webview2RuntimeInfo.Value.Path, userDataDir, options).Result;
 
             splashScreenWebView = new WebView2();
             screenWebView = new WebView2();
@@ -191,6 +196,7 @@ namespace YouTubeWindows
             await splashScreenWebView.EnsureCoreWebView2Async(coreWebView2Environment);
             await splashScreenWebView.ExecuteScriptAsync("document.body.style.backgroundColor = '#181818'");
             await NativeBridgeRegister(splashScreenWebView);
+            _ = splashScreenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setEmitTouchEventsForMouse", "{\"enabled\": true}");
             splashScreenWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
             splashScreenWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
             splashScreenWebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
@@ -202,6 +208,8 @@ namespace YouTubeWindows
         {
             await screenWebView.EnsureCoreWebView2Async(coreWebView2Environment);
             await NativeBridgeRegister(screenWebView);
+            _ = screenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setEmitTouchEventsForMouse", "{\"enabled\": true}");
+            _ = screenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setDeviceMetricsOverride", "{\"width\": 0, \"height\": 0, \"deviceScaleFactor\": 10 ,\"screenWidth\": 7680 ,\"screenHeight\": 4320, \"mobile\": false, \"dontSetVisibleSize\": false}");
             screenWebView.CoreWebView2.DOMContentLoaded += CoreWebView2_DOMContentLoaded;
             screenWebView.CoreWebView2.AddWebResourceRequestedFilter("https://www.gstatic.com/ytlr/txt/licenses_googletv.txt", CoreWebView2WebResourceContext.All);
             screenWebView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
@@ -220,7 +228,11 @@ namespace YouTubeWindows
             Console.WriteLine(e.Request.Uri);
             if (e.Request.Uri == "https://www.gstatic.com/ytlr/txt/licenses_googletv.txt")
             {
-                var stream = GenerateStreamFromString(Resource.Staff.Replace("\n", "\n\u200B"));
+                var stream = GenerateStreamFromString(
+                    Resource.Staff
+                    .Replace("\n", "\n\u200B")
+                    .Replace("<--%WEBVIEW_VERSION%-->", webview2RuntimeInfo.Value.Version)
+                    .Replace("<--%PROGRAM_VERSION%-->", Version.Parse(Application.ProductVersion).ToString(3)));
                 e.Response = coreWebView2Environment.CreateWebResourceResponse(stream, 200, "OK", "Content-Type: text/html");
                 new Thread(() =>
                 {
@@ -255,11 +267,13 @@ namespace YouTubeWindows
         {
             if (screenWebView.Source.ToString().StartsWith("https://www.youtube.com"))
             {
-                screenWebView.Dock = DockStyle.None;
-                screenWebView.Width = 15360;
-                screenWebView.Height = 8640;
                 // 破解分辨率（先伪装8K屏幕，然后还原）
-                screenWebView.ExecuteScriptAsync("{ let YTInitCheckerId = setInterval(() => { if(!!document.getElementsByTagName(\"video\")[0]) { clearInterval(YTInitCheckerId); NativeBridge.ActiveScreen(); } }, 1000); }");
+                //screenWebView.Dock = DockStyle.None;
+                //screenWebView.Width = 15360;
+                //screenWebView.Height = 8640;
+                //screenWebView.ExecuteScriptAsync("{ let YTInitCheckerId = setInterval(() => { if(!!document.getElementsByTagName(\"video\")[0]) { clearInterval(YTInitCheckerId); NativeBridge.ActiveScreen(); } }, 1000); }");
+                // 新版用 DeviceMetricsOverride 替代
+                screenWebView.ExecuteScriptAsync("{ setTimeout(() => { NativeBridge.ActiveScreen(); }, 0); }");
                 // 后台播放
                 screenWebView.ExecuteScriptAsync("for (event_name of ['visibilitychange', 'webkitvisibilitychange', 'blur']) { window.addEventListener(event_name, function(event) { event.stopImmediatePropagation(); }, true); }");
                 // 注入动画
@@ -279,6 +293,27 @@ namespace YouTubeWindows
         private void MainForm_Activated(object sender, EventArgs e)
         {
             screenWebView.Focus();
+        }
+
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            if (WindowState != FormWindowState.Maximized)
+            {
+                var aspect = (double)16 / 9;
+                var height = this.ClientSize.Width / aspect;
+                var width = height * aspect;
+                this.ClientSize = new Size((int)width, (int)height);
+            }
+        }
+
+        private void MainForm_ResizeBegin(object sender, EventArgs e)
+        {
+            this.SuspendLayout();
+        }
+
+        private void MainForm_ResizeEnd(object sender, EventArgs e)
+        {
+            this.ResumeLayout();
         }
     }
 
