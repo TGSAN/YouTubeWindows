@@ -13,8 +13,7 @@ x86/x64/arm64
 
 运行时：
 
-1.	Microsoft Edge (Chromium) 非稳定版本 86.0.616.0 及以上
-	或 WebView2 Runtime：https://developer.microsoft.com/zh-cn/microsoft-edge/webview2/
+1.	安装 WebView2 Runtime：https://go.microsoft.com/fwlink/p/?LinkId=2124703
 	或将 WebView2 Shared Runtime 放入 runtime 目录（PlayReady DRM 将不可用）
 
 2.	.Net 4.5.2+
