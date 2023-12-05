@@ -181,7 +181,7 @@ namespace YouTubeWindows
         private void MainForm_Load(object sender, EventArgs e)
         {
             var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "User Data";
-            var ua = "Google-OTT/CloudMoe-Version (DESKTOP; Windows NT " + Environment.OSVersion.Version.ToString() + "; Wired) Cobalt/" + webview2RuntimeInfo.Value.Version + " (unlike Gecko)";
+            var ua = "OTT/WindowsApp (DESKTOP; Windows NT " + Environment.OSVersion.Version.ToString() + "; Wired) Cobalt/" + webview2RuntimeInfo.Value.Version + "-CloudMoe (unlike Gecko) canary_experiment";
             var options = new CoreWebView2EnvironmentOptions(webview2StartupArgs + "--allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
             coreWebView2Environment = CoreWebView2Environment.CreateAsync(webview2RuntimeInfo.Value.Path, userDataDir, options).Result;
 
