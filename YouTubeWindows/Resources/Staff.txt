@@ -1,4 +1,4 @@
-﻿YouTube TV For Windows Client <--%PROGRAM_VERSION%-->
+﻿YouTube Leanback for Windows <--%PROGRAM_VERSION%-->
 By TGSAN
 
 Windows Cobalt on EBWebView2

@@ -1,4 +1,4 @@
-YouTube Windows
+YouTube Leanback for Windows
 
 要求
 

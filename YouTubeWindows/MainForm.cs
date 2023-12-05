@@ -181,7 +181,7 @@ namespace YouTubeWindows
         private void MainForm_Load(object sender, EventArgs e)
         {
             var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "User Data";
-            var ua = "GoogleTV/CloudMoe-Version (DISKTOP; Windows NT " + Environment.OSVersion.Version.ToString() + "; Wired) Cobalt/" + webview2RuntimeInfo.Value.Version + " (unlike Gecko) html5_enable_androidtv_cobalt_widevine html5_enable_cobalt_experimental_vp9_decoder html5_live_head_playable";
+            var ua = "Google-OTT/CloudMoe-Version (DESKTOP; Windows NT " + Environment.OSVersion.Version.ToString() + "; Wired) Cobalt/" + webview2RuntimeInfo.Value.Version + " (unlike Gecko)";
             var options = new CoreWebView2EnvironmentOptions(webview2StartupArgs + "--allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
             coreWebView2Environment = CoreWebView2Environment.CreateAsync(webview2RuntimeInfo.Value.Path, userDataDir, options).Result;
 
@@ -241,7 +241,7 @@ namespace YouTubeWindows
             _ = screenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setEmitTouchEventsForMouse", "{\"enabled\": true}");
             _ = screenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setDeviceMetricsOverride", "{\"width\": 0, \"height\": 0, \"deviceScaleFactor\": 10 ,\"screenWidth\": 7680 ,\"screenHeight\": 4320, \"mobile\": false, \"dontSetVisibleSize\": false}");
             screenWebView.CoreWebView2.DOMContentLoaded += CoreWebView2_DOMContentLoaded;
-            screenWebView.CoreWebView2.AddWebResourceRequestedFilter("https://www.gstatic.com/ytlr/txt/licenses_googletv.txt", CoreWebView2WebResourceContext.All);
+            screenWebView.CoreWebView2.AddWebResourceRequestedFilter("https://www.gstatic.com/ytlr/txt/licenses_*", CoreWebView2WebResourceContext.All);
             screenWebView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
             screenWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
             screenWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
@@ -256,7 +256,7 @@ namespace YouTubeWindows
         private void CoreWebView2_WebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e)
         {
             Console.WriteLine(e.Request.Uri);
-            if (e.Request.Uri == "https://www.gstatic.com/ytlr/txt/licenses_googletv.txt")
+            if (e.Request.Uri.StartsWith("https://www.gstatic.com/ytlr/txt/licenses_"))
             {
                 var stream = GenerateStreamFromString(
                     Resource.Staff
