@@ -186,7 +186,9 @@ namespace YouTubeWindows
             coreWebView2Environment = CoreWebView2Environment.CreateAsync(webview2RuntimeInfo.Value.Path, userDataDir, options).Result;
 
             splashScreenWebView = new WebView2();
+            splashScreenWebView.DefaultBackgroundColor = Color.Transparent;
             screenWebView = new WebView2();
+            screenWebView.DefaultBackgroundColor = Color.Transparent;
 
             screenWebView.Enabled = false;
 
@@ -327,7 +329,7 @@ namespace YouTubeWindows
 
         private void MainForm_Resize(object sender, EventArgs e)
         {
-            if (WindowState != FormWindowState.Maximized)
+            if (WindowState == FormWindowState.Normal)
             {
                 var aspect = (double)16 / 9;
                 var height = this.ClientSize.Width / aspect;
