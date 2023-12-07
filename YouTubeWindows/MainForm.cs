@@ -241,7 +241,7 @@ namespace YouTubeWindows
             await screenWebView.EnsureCoreWebView2Async(coreWebView2Environment);
             await NativeBridgeRegister(screenWebView);
             _ = screenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setEmitTouchEventsForMouse", "{\"enabled\": true}");
-            _ = screenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setDeviceMetricsOverride", "{\"width\": 0, \"height\": 0, \"deviceScaleFactor\": 10 ,\"screenWidth\": 7680 ,\"screenHeight\": 4320, \"mobile\": false, \"dontSetVisibleSize\": false}");
+            _ = screenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setDeviceMetricsOverride", "{\"width\": 0, \"height\": 0, \"deviceScaleFactor\": 10, \"scale\": 0.1, \"screenWidth\": 7680,\"screenHeight\": 4320, \"mobile\": false, \"dontSetVisibleSize\": false}");
             screenWebView.CoreWebView2.DOMContentLoaded += CoreWebView2_DOMContentLoaded;
             screenWebView.CoreWebView2.AddWebResourceRequestedFilter("https://www.gstatic.com/ytlr/txt/licenses_*", CoreWebView2WebResourceContext.All);
             screenWebView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
