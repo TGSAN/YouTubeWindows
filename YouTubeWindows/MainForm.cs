@@ -38,7 +38,6 @@ namespace YouTubeWindows
                 return screenRectangle.Top - this.Top;
             }
         }
-        private bool allowEndscreen = false;
 
         private bool _fullscreen = false;
         public bool fullscreen
@@ -191,11 +190,6 @@ namespace YouTubeWindows
             {
                 switch (arg)
                 {
-                    case "--allow-endscreen":
-                        {
-                            allowEndscreen = true;
-                        }
-                        break;
                     default:
                         {
                             webview2StartupArgsBuilder.Append(arg + " ");
@@ -225,7 +219,7 @@ namespace YouTubeWindows
         private void MainForm_Load(object sender, EventArgs e)
         {
             var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "User Data";
-            var ua = "TV (PLATFORM_DETAILS_OTT; Windows NT " + Environment.OSVersion.Version.ToString() + ") Cobalt/" + webview2RuntimeInfo.Value.Version + "-CloudMoe (unlike Gecko) canary_experiment";
+            var ua = "TV (PLATFORM_DETAILS_OTT), Cobalt/" + webview2RuntimeInfo.Value.Version + "-CloudMoe (unlike Gecko) Starboard/14, SystemIntegratorName_OTT_CloudMoeOS_2025/FirmwareVersion (Windows NT " + Environment.OSVersion.Version.ToString() + ")";
             var options = new CoreWebView2EnvironmentOptions(webview2StartupArgs + "--disable_vp_auto_hdr --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
             coreWebView2Environment = CoreWebView2Environment.CreateAsync(webview2RuntimeInfo.Value.Path, userDataDir, options).Result;
 
@@ -319,7 +313,7 @@ namespace YouTubeWindows
             await screenWebView.EnsureCoreWebView2Async(coreWebView2Environment);
             await NativeBridgeRegister(screenWebView);
             _ = screenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setEmitTouchEventsForMouse", "{\"enabled\": true}");
-            _ = screenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setDeviceMetricsOverride", "{\"width\": 0, \"height\": 0, \"deviceScaleFactor\": 10, \"scale\": 0.1, \"screenWidth\": 7680,\"screenHeight\": 4320, \"mobile\": false, \"dontSetVisibleSize\": false}");
+            _ = screenWebView.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setDeviceMetricsOverride", "{\"width\": 0, \"height\": 0, \"deviceScaleFactor\": 1, \"scale\": 0.1, \"screenWidth\": 7680,\"screenHeight\": 4320, \"mobile\": false, \"dontSetVisibleSize\": false}");
             screenWebView.CoreWebView2.DOMContentLoaded += CoreWebView2_DOMContentLoaded;
             screenWebView.CoreWebView2.AddWebResourceRequestedFilter("https://www.gstatic.com/ytlr/txt/licenses_*", CoreWebView2WebResourceContext.All);
             screenWebView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
@@ -343,7 +337,7 @@ namespace YouTubeWindows
                     .Replace("\n", "\n\u200B")
                     .Replace("<--%WEBVIEW_VERSION%-->", webview2RuntimeInfo.Value.Version)
                     .Replace("<--%PROGRAM_VERSION%-->", Version.Parse(Application.ProductVersion).ToString(3)));
-                e.Response = coreWebView2Environment.CreateWebResourceResponse(stream, 200, "OK", "Content-Type: text/html");
+                e.Response = coreWebView2Environment.CreateWebResourceResponse(stream, 200, "OK", "Access-Control-Allow-Origin: *\r\nContent-Type: text/html");
                 new Thread(() =>
                 {
                     Thread.Sleep(3000); // 流资源 3000ms 后释放
@@ -370,22 +364,12 @@ namespace YouTubeWindows
         {
             if (screenWebView.Source.ToString().StartsWith("https://www.youtube.com"))
             {
-                // 破解分辨率（先伪装8K屏幕，然后还原）
-                //screenWebView.Dock = DockStyle.None;
-                //screenWebView.Width = 15360;
-                //screenWebView.Height = 8640;
-                //screenWebView.ExecuteScriptAsync("{ let YTInitCheckerId = setInterval(() => { if(!!document.getElementsByTagName(\"video\")[0]) { clearInterval(YTInitCheckerId); NativeBridge.ActiveScreen(); } }, 1000); }");
-                // 新版用 DeviceMetricsOverride 替代
+                // 破解分辨率新版用 DeviceMetricsOverride 替代
                 screenWebView.ExecuteScriptAsync("{ setTimeout(() => { NativeBridge.ActiveScreen(); }, 0); }");
                 // 后台播放
                 screenWebView.ExecuteScriptAsync("for (event_name of ['visibilitychange', 'webkitvisibilitychange', 'blur']) { window.addEventListener(event_name, function(event) { event.stopImmediatePropagation(); }, true); }");
                 // 注入动画
                 screenWebView.ExecuteScriptAsync("document.body.style.opacity = 0; document.body.style.transition = 'opacity 333ms';");
-                // 隐藏片尾视频内链接
-                if (!allowEndscreen)
-                {
-                    screenWebView.ExecuteScriptAsync("{ const style = document.createElement('style'); style.innerHTML = 'ytlr-endscreen-renderer { display: none !important; }'; document.head.appendChild(style); }");
-                }
             }
             else
             {
