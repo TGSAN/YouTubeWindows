@@ -22,5 +22,5 @@ x86/x64/arm64
 
 命令行参数：
 
---allow-endscreen				允许显示片尾“视频内链接”叠加层
+--proxy-server="http://proxy-ip:proxy-port"		使用代理访问
 --enable-features={Feature1,Feature2,...}		使用Feature1,Feature2,...等特性（参考 Microsoft Edge 文档）
