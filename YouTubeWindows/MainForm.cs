@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -226,8 +225,8 @@ namespace YouTubeWindows
         private void MainForm_Load(object sender, EventArgs e)
         {
             var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "User Data";
-            var ua = "OTT/WindowsApp (DESKTOP; Windows NT " + Environment.OSVersion.Version.ToString() + "; Wired) Cobalt/" + webview2RuntimeInfo.Value.Version + "-CloudMoe (unlike Gecko) canary_experiment";
-            var options = new CoreWebView2EnvironmentOptions(webview2StartupArgs + "--allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
+            var ua = "TV (PLATFORM_DETAILS_OTT; Windows NT " + Environment.OSVersion.Version.ToString() + ") Cobalt/" + webview2RuntimeInfo.Value.Version + "-CloudMoe (unlike Gecko) canary_experiment";
+            var options = new CoreWebView2EnvironmentOptions(webview2StartupArgs + "--disable_vp_auto_hdr --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
             coreWebView2Environment = CoreWebView2Environment.CreateAsync(webview2RuntimeInfo.Value.Path, userDataDir, options).Result;
 
             splashScreenWebView = new WebView2();
