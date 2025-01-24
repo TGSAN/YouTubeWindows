@@ -23,7 +23,7 @@ namespace YouTubeWindows
     {
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
-        
+
         public string webview2StartupArgs = "";
         WebView2RuntimeInfo? webview2RuntimeInfo = null;
         private CoreWebView2Environment coreWebView2Environment;
@@ -40,8 +40,8 @@ namespace YouTubeWindows
             }
         }
         private bool allowEndscreen = false;
-        private bool _fullscreen = false;
 
+        private bool _fullscreen = false;
         public bool fullscreen
         {
             get
@@ -61,6 +61,39 @@ namespace YouTubeWindows
                     FormBorderStyle = FormBorderStyle.Sizable;
                     WindowState = FormWindowState.Normal;
                 }
+            }
+        }
+
+        private bool _cursorShown = true;
+        public bool cursorShown
+        {
+            get
+            {
+                return _cursorShown;
+            }
+            set
+            {
+                if (value == _cursorShown)
+                {
+                    return;
+                }
+
+                if (value)
+                {
+                    TryInvoke(() =>
+                    {
+                        System.Windows.Forms.Cursor.Show();
+                    });
+                }
+                else
+                {
+                    TryInvoke(() =>
+                    {
+                        System.Windows.Forms.Cursor.Hide();
+                    });
+                }
+
+                _cursorShown = value;
             }
         }
 
@@ -106,6 +139,18 @@ namespace YouTubeWindows
             }
             catch { }
             return null;
+        }
+
+        public void TryInvoke(Action action)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(action);
+            }
+            else
+            {
+                action();
+            }
         }
 
         public MainForm(string[] args)
@@ -164,7 +209,7 @@ namespace YouTubeWindows
             webview2StartupArgs = webview2StartupArgsBuilder.ToString();
 
             InitializeComponent();
-            
+
             UseImmersiveDarkMode(this.Handle, true);
 
             this.Icon = Resource.icon;
@@ -199,6 +244,40 @@ namespace YouTubeWindows
             splashScreenWebViewPanel.Controls.Add(splashScreenWebView);
 
             InitializeSplashScreenAsync();
+
+            Task.Run(async () =>
+            {
+                const int stepMs = 100;
+                int hideMs = 2000;
+                int currentMs = 0;
+                Point lastMousePos = System.Windows.Forms.Cursor.Position;
+                while (true)
+                {
+                    await Task.Delay(stepMs);
+                    int x = lastMousePos.X;
+                    int y = lastMousePos.Y;
+                    Point pos = System.Windows.Forms.Cursor.Position;
+                    if (pos.X == x && pos.Y == y)
+                    {
+                        if (currentMs >= hideMs)
+                        {
+                            cursorShown = false;
+                        }
+                        else
+                        {
+                            currentMs += stepMs;
+                            //Console.WriteLine("Mouse Stop: " + currentMs);
+                        }
+                    }
+                    else
+                    {
+                        currentMs = 0;
+                        cursorShown = true;
+                        lastMousePos = pos;
+                        //Console.WriteLine("Mouse Moved");
+                    }
+                }
+            });
         }
 
         private static Stream GenerateStreamFromString(string s)
@@ -274,14 +353,7 @@ namespace YouTubeWindows
                         stream.Close();
                     });
 
-                    if (InvokeRequired)
-                    {
-                        Invoke(action);
-                    }
-                    else
-                    {
-                        action();
-                    }
+                    TryInvoke(action);
                 }).Start();
             }
         }
@@ -398,14 +470,7 @@ namespace YouTubeWindows
                     ctxMainForm.screenWebView.Dock = DockStyle.Fill;
                 });
 
-                if (ctxMainForm.InvokeRequired)
-                {
-                    ctxMainForm.Invoke(action1);
-                }
-                else
-                {
-                    action1();
-                }
+                ctxMainForm.TryInvoke(action1);
 
                 Thread.Sleep(3000);
 
@@ -415,14 +480,7 @@ namespace YouTubeWindows
                     ctxMainForm.screenWebViewPanel.Visible = true;
                 });
 
-                if (ctxMainForm.InvokeRequired)
-                {
-                    ctxMainForm.Invoke(action2);
-                }
-                else
-                {
-                    action2();
-                }
+                ctxMainForm.TryInvoke(action2);
 
                 Thread.Sleep(500);
 
@@ -439,14 +497,7 @@ namespace YouTubeWindows
                     }
                 });
 
-                if (ctxMainForm.InvokeRequired)
-                {
-                    ctxMainForm.Invoke(action3);
-                }
-                else
-                {
-                    action3();
-                }
+                ctxMainForm.TryInvoke(action3);
             }).Start();
         }
 
