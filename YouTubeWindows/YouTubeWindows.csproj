@@ -52,6 +52,7 @@
     </Reference>
     <Reference Include="Microsoft.Web.WebView2.Wpf, Version=1.0.1518.46, Culture=neutral, PublicKeyToken=2a8ab48044d2601e, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Web.WebView2.1.0.1518.46\lib\net45\Microsoft.Web.WebView2.Wpf.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System">
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.dll</HintPath>

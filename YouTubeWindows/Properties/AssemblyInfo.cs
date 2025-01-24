@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("YouTube Leanback for Windows")]
-[assembly: AssemblyCopyright("Copyright © CloudMoe 2024")]
+[assembly: AssemblyCopyright("Copyright © CloudMoe 2025")]
 [assembly: AssemblyTrademark("TGSAN")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 //可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值
 //通过使用 "*"，如下所示:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.2.3")]
-[assembly: AssemblyFileVersion("1.1.2.3")]
+[assembly: AssemblyVersion("1.1.3.0")]
+[assembly: AssemblyFileVersion("1.1.3.0")]
