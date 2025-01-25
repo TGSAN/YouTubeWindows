@@ -388,6 +388,7 @@ namespace YouTubeWindows
                 // 修改功能开关
                 screenWebView.ExecuteScriptAsync("window.environment.has_touch_support = true;");
                 screenWebView.ExecuteScriptAsync("window.environment.feature_switches.disable_client_side_app_quality_logic = false;");
+                screenWebView.ExecuteScriptAsync("window.environment.feature_switches.mdx_device_label = window.environment.feature_switches.mdx_device_label + \" (Windows)\";");
             }
             else
             {
