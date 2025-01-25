@@ -219,8 +219,8 @@ namespace YouTubeWindows
         private void MainForm_Load(object sender, EventArgs e)
         {
             var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "User Data";
-            var ua = "TV (PLATFORM_DETAILS_OTT), Cobalt/" + webview2RuntimeInfo.Value.Version + "-CloudMoe (unlike Gecko) Starboard/14, SystemIntegratorName_OTT_CloudMoeOS_2025/FirmwareVersion (Windows NT " + Environment.OSVersion.Version.ToString() + ")";
-            var options = new CoreWebView2EnvironmentOptions(webview2StartupArgs + "--disable_vp_auto_hdr --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
+            var ua = "TV (PLATFORM_DETAILS_OTT), Cobalt/" + webview2RuntimeInfo.Value.Version + "-CloudMoe (unlike Gecko) Starboard/14, SystemIntegratorName_OTT_CloudMoeSubsystem_2025/FirmwareVersion (Windows NT " + Environment.OSVersion.Version.ToString() + ")";
+            var options = new CoreWebView2EnvironmentOptions(webview2StartupArgs + "--allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --disable_vp_auto_hdr --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
             coreWebView2Environment = CoreWebView2Environment.CreateAsync(webview2RuntimeInfo.Value.Path, userDataDir, options).Result;
 
             splashScreenWebView = new WebView2();
@@ -317,6 +317,8 @@ namespace YouTubeWindows
             screenWebView.CoreWebView2.DOMContentLoaded += CoreWebView2_DOMContentLoaded;
             screenWebView.CoreWebView2.AddWebResourceRequestedFilter("https://www.gstatic.com/ytlr/txt/licenses_*", CoreWebView2WebResourceContext.All);
             screenWebView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
+            screenWebView.CoreWebView2.WindowCloseRequested += CoreWebView2_WindowCloseRequested;
+            screenWebView.CoreWebView2.PermissionRequested += CoreWebView2_PermissionRequested;
             screenWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
             screenWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
             screenWebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
@@ -325,6 +327,16 @@ namespace YouTubeWindows
             screenWebView.CoreWebView2.OpenDevToolsWindow();
 #endif
             ReloadApp();
+        }
+
+        private void CoreWebView2_WindowCloseRequested(object sender, object e)
+        {
+            Close();
+        }
+
+        private void CoreWebView2_PermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs e)
+        {
+            e.Handled = true;
         }
 
         private void CoreWebView2_WebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e)
@@ -370,6 +382,12 @@ namespace YouTubeWindows
                 screenWebView.ExecuteScriptAsync("for (event_name of ['visibilitychange', 'webkitvisibilitychange', 'blur']) { window.addEventListener(event_name, function(event) { event.stopImmediatePropagation(); }, true); }");
                 // 注入动画
                 screenWebView.ExecuteScriptAsync("document.body.style.opacity = 0; document.body.style.transition = 'opacity 333ms';");
+                // 修改设备型号
+                screenWebView.ExecuteScriptAsync("window.environment.brand = \"Apple\";");
+                screenWebView.ExecuteScriptAsync("window.environment.model = \"AppleTV\";");
+                // 修改功能开关
+                screenWebView.ExecuteScriptAsync("window.environment.has_touch_support = true;");
+                screenWebView.ExecuteScriptAsync("window.environment.feature_switches.disable_client_side_app_quality_logic = false;");
             }
             else
             {
