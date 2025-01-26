@@ -23,6 +23,7 @@ namespace YouTubeWindows
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
+        public bool allowAutoHDR = false;
         public string webview2StartupArgs = "";
         WebView2RuntimeInfo? webview2RuntimeInfo = null;
         private CoreWebView2Environment coreWebView2Environment;
@@ -190,6 +191,11 @@ namespace YouTubeWindows
             {
                 switch (arg)
                 {
+                    case "--allow-auto-hdr":
+                        {
+                            allowAutoHDR = true;
+                        }
+                        break;
                     default:
                         {
                             webview2StartupArgsBuilder.Append(arg + " ");
@@ -216,11 +222,32 @@ namespace YouTubeWindows
             Controls.Add(screenWebViewPanel); // 放置App承载层（底部）
         }
 
+        protected override void WndProc(ref Message m)
+        {
+            switch (m.Msg)
+            {
+                case 0x0210 /* WM_PARENTNOTIFY */:
+                    if (m.WParam == (IntPtr)0x0204 /* WM_RBUTTONDOWN */)
+                    {
+                        SendKeys.Send("{ESC}");
+                    }
+                    break;
+            }
+            base.WndProc(ref m);
+        }
+
         private void MainForm_Load(object sender, EventArgs e)
         {
             var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "User Data";
             var ua = "TV (PLATFORM_DETAILS_OTT), Cobalt/" + webview2RuntimeInfo.Value.Version + "-CloudMoe (unlike Gecko) Starboard/14, SystemIntegratorName_OTT_CloudMoeSubsystem_2025/FirmwareVersion (Windows NT " + Environment.OSVersion.Version.ToString() + ")";
-            var options = new CoreWebView2EnvironmentOptions(webview2StartupArgs + "--allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --disable_vp_auto_hdr --user-agent=\"" + ua + "\""); // Mozilla/5.0 (WINDOWS 10.0) Cobalt/19.lts.4.196747-gold (unlike Gecko) v8/6.5.254.43 gles Starboard/10, GAME_XboxOne/10.0.18363.7196 (Microsoft, XboxOne X, Wired)
+            webview2StartupArgs = webview2StartupArgs + "--allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --user-agent=\"" + ua + "\"";
+            
+            if (!allowAutoHDR) 
+            {
+                webview2StartupArgs += " --disable_vp_auto_hdr";
+            }
+
+            var options = new CoreWebView2EnvironmentOptions(webview2StartupArgs);
             coreWebView2Environment = CoreWebView2Environment.CreateAsync(webview2RuntimeInfo.Value.Path, userDataDir, options).Result;
 
             splashScreenWebView = new WebView2();
@@ -292,6 +319,8 @@ namespace YouTubeWindows
             await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.close = window?.chrome?.webview?.hostObjects?.NativeBridge?.Close;");
             // 全屏和重载监听
             await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.addEventListener('keydown', (event) => { if (event.keyCode === 122) { event.returnValue = false; NativeBridge.ToggleFullscreen(); } if(event.keyCode == 116) { event.returnValue = false; NativeBridge.ReloadApp(); } }, true);");
+            // Video 标签 Hook
+            await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.HTMLVideoElement.prototype.playOriginal = window.HTMLVideoElement.prototype.play; window.HTMLVideoElement.prototype.play = function (...args) { this.msVideoProcessing = \"msGraphicsDriverEnhancement\"; return this.playOriginal(...args); }");
         }
 
         private async void InitializeSplashScreenAsync()
@@ -388,7 +417,12 @@ namespace YouTubeWindows
                 // 修改功能开关
                 screenWebView.ExecuteScriptAsync("window.environment.has_touch_support = true;");
                 screenWebView.ExecuteScriptAsync("window.environment.feature_switches.disable_client_side_app_quality_logic = false;");
-                screenWebView.ExecuteScriptAsync("window.environment.feature_switches.mdx_device_label = window.environment.feature_switches.mdx_device_label + \" (Windows)\";");
+                string deviceName = "YouTube on Windows";
+                if (!String.IsNullOrEmpty(System.Environment.MachineName)) 
+                {
+                    deviceName += $" ({System.Environment.MachineName})";
+                }
+                screenWebView.ExecuteScriptAsync("window.environment.feature_switches.mdx_device_label = \"" + deviceName + "\";");
             }
             else
             {
