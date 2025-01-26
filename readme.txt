@@ -22,5 +22,6 @@ x86/x64/arm64
 
 命令行参数：
 
+--allow-auto-hdr					允许将 SDR 内容拉伸到 HDR（比如 NVIDIA RTX HDR）
 --proxy-server="http://proxy-ip:proxy-port"		使用代理访问
 --enable-features={Feature1,Feature2,...}		使用Feature1,Feature2,...等特性（参考 Microsoft Edge 文档）
