@@ -248,7 +248,7 @@ namespace YouTubeWindows
         {
             var userDataDir = AppDomain.CurrentDomain.SetupInformation.ApplicationBase + "User Data";
             var ua = "TV (PLATFORM_DETAILS_OTT), Cobalt/" + webview2RuntimeInfo.Value.Version + "-CloudMoe (unlike Gecko) Starboard/14, SystemIntegratorName_OTT_CloudMoeSubsystem_2025/FirmwareVersion (Windows NT " + Environment.OSVersion.Version.ToString() + ")";
-            webview2StartupArgs = webview2StartupArgs + "--allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --user-agent=\"" + ua + "\"";
+            webview2StartupArgs = webview2StartupArgs + "--single-process --allow-failed-policy-fetch-for-test --allow-running-insecure-content --disable-web-security --user-agent=\"" + ua + "\"";
 
             if (!allowAutoHDR)
             {
@@ -326,7 +326,7 @@ namespace YouTubeWindows
             // 替换 Close
             await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.close = window?.chrome?.webview?.hostObjects?.NativeBridge?.Close;");
             // 全屏和重载监听
-            await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.addEventListener('keydown', (event) => { if (event.keyCode === 122) { event.returnValue = false; NativeBridge.ToggleFullscreen(); } if(event.keyCode == 116) { event.returnValue = false; NativeBridge.ReloadApp(); } }, true);");
+            await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.addEventListener('keydown', (event) => { if (event.keyCode === 122) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); event.returnValue = false; NativeBridge.ToggleFullscreen(); } if(event.keyCode == 116 || (event.ctrlKey && event.keyCode == 82)) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); event.returnValue = false; NativeBridge.ReloadApp(); } }, true);");
             // Video 标签 Hook
             await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.HTMLVideoElement.prototype.playOriginal = window.HTMLVideoElement.prototype.play; window.HTMLVideoElement.prototype.play = function (...args) { this.msVideoProcessing = \"msGraphicsDriverEnhancement\"; return this.playOriginal(...args); }");
         }

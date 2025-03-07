@@ -15,6 +15,14 @@
 
 2. .NET 4.5.2 or later
 
+## Control
+
+- `Mice Right Button` `Esc`  - Back
+- `Mice Left Button` `Enter` - Confirm
+- `Arrow Keys`               - Move Cursor
+- `F11`                      - Fullscreen
+- `F5` `Ctrl + R`            - Reload App
+
 ## Advanced
 
 **Command Line Parameters**
@@ -42,6 +50,14 @@ x86/x64/arm64
    或将 WebView2 Shared Runtime 放入 runtime 目录（PlayReady DRM 将不可用）
 
 2. .Net 4.5.2+
+
+## 控制
+
+- `鼠标右键` `Esc`   - 返回
+- `鼠标左键` `Enter` - 确认
+- `方向键`           - 移动光标
+- `F11`              - Fullscreen
+- `F5` `Ctrl + R`    - Reload App
 
 ## 高级
 
