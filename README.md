@@ -4,7 +4,7 @@
 
 **Operating System**
 - Windows 7/8.1/10/11
-- Windows Server 2008 R2/2012 R2/2012/2016/2019/2022
+- Windows Server 2008 R2/2012 R2/2012/2016/2019/2022/2025
 
 **Processor**
 - x86/x64/arm64
